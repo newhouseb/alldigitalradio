@@ -3,9 +3,9 @@ import numpy as np
 from nmigen.sim import Simulator, Tick, Settle
 from nmigen import *
 
-def make_callable(m, startup_cycles=0):
-    inputs = m.inputs()
-    outputs = m.outputs()
+def make_callable(m, startup_cycles=0, inputs=None, outputs=None):
+    inputs = inputs or m.inputs()
+    outputs = outputs or m.outputs()
 
     
     def gen():
