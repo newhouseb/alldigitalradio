@@ -9,7 +9,7 @@ class CWOutExample(Elaboratable):
     def elaborate(self, platform):
         m = Module()
         m.submodules.serdes = serdes = XilinxGTPSerdes()
-        m.d.comb += serdes.tx_data.eq(0b10101010101010101010)
+        m.d.comb += serdes.tx_data.eq(serdes.rx_data)
         return m
 
 TE0714.resources += [

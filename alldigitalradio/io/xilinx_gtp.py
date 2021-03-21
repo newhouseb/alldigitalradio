@@ -32,6 +32,10 @@ class XilinxGTPSerdes(GenericSerdes):
             [platform.request('tx_n', dir='-'), platform.request('tx_p', dir='-')], 
             [platform.request('rx_n', dir='-'), platform.request('rx_p', dir='-')], 
             25e6, tx_buffer_enable=True, rx_buffer_enable=True)
+        m.d.comb += [
+            gtp.txdata.eq(self.tx_data),
+            self.rx_data.eq(gtp.rxdata)
+        ]
 
         return m
 
@@ -236,6 +240,7 @@ class GTP(Elaboratable):
         self.tx_init = tx_init = GTPTXInit(self.sys_clk_freq, buffer_enable=self.tx_buffer_enable)
 
         self.rxdata = Signal(self.data_width)
+        self.txdata = Signal(self.data_width)
 
         self.debug = debug
         self.cdr_hold = Signal()
@@ -321,10 +326,8 @@ class GTP(Elaboratable):
         # GTPE2_CHANNEL instance -------------------------------------------------------------------
         class Open(Signal): pass
 
-        txdata = Signal(self.data_width)
+        txdata = self.txdata
         rxdata = self.rxdata
-
-        m.d.sync += txdata.eq(0b0) #11001100110011001100) #txdata + 1)
 
         rxphaligndone = Signal()
         self.gtp_params = dict(
@@ -650,7 +653,7 @@ class GTP(Elaboratable):
                 self.debug[4].eq(tx_init.init_delay.wait),
                 self.debug[5].eq(pmadone),
             ]
-        else:
+        elif False:
             m.d.comb += [
                 self.debug[0].eq(rx_init.gtrxreset),
                 self.debug[1].eq(rx_init.rxuserrdy),

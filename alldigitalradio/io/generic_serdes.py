@@ -1,4 +1,4 @@
-from nmigen import Elaboratable
+from nmigen import Elaboratable, Signal
 
 class GenericSerdes(Elaboratable):
     def __init__(self, refclk_freq=125e6, line_rate=5e9):
