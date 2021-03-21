@@ -7,3 +7,7 @@ class GenericSerdes(Elaboratable):
 
         self.tx_data = Signal(20)
         self.tx_clock = Signal()
+
+default_serdes = None
+def get_serdes_implementation():
+    return default_serdes
