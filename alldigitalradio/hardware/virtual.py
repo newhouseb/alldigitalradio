@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
 	int bit = 0;
 
 	uint64_t time = 0;
+	int rdy_last = 0;
 
 	int c;
 	while (fp) {
@@ -48,6 +49,10 @@ int main(int argc, char** argv) {
 			input |= (1 << bit);
 		}
 		if (bit == 19) {
+			if (top.tx_rdy && rdy_last == 0) {
+				printf("%c", top.tx_data);
+			}
+			rdy_last = top.tx_rdy;
 
 			top.rx_data = input;
 			top.rx_clock = 0;
@@ -64,6 +69,7 @@ int main(int argc, char** argv) {
 			
 			bit = 0;
 			input = 0;
+
 		} else {
 			bit += 1;
 		}
@@ -72,7 +78,7 @@ int main(int argc, char** argv) {
 	tfp->close();
 	fclose(out);
 
-    printf("Simulation Complete!\\n");
+    printf("\\nSimulation Complete!\\n");
 
 	return 0;
 }
@@ -90,7 +96,7 @@ def load():
         def build(self, module, **kwargs):
             # TODO: mkdir build
             with open('build/top.v', 'w') as f:
-                f.write(verilog.convert(module, ports=[module.serdes.rx_data, module.serdes.rx_clock, module.uart.tx_o]))
+                f.write(verilog.convert(module, ports=[module.serdes.rx_data, module.serdes.rx_clock, module.uart.tx_data, module.uart.tx_rdy, module.uart.tx_ack]))
 
             os.chdir('build')
             with open('main.cpp', 'w') as f:
@@ -107,6 +113,6 @@ def load():
             ])
 
             subprocess.check_call(['make', '-C', 'obj_dir/', '-f', 'Vtop.mk'])
-            subprocess.check_call(['./obj_dir/Vtop', sys.argv[2]])
+            subprocess.check_call(['./obj_dir/Vtop', "../" + sys.argv[2]])
 
     return (VirtualPlatform, VirtualSerdes)
