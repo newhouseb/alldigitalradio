@@ -1,4 +1,4 @@
-from nmigen import Elaboratable, Signal
+from nmigen import Elaboratable, Signal, Module
 
 class GenericSerdes(Elaboratable):
     def __init__(self, refclk_freq=125e6, line_rate=5e9):
@@ -7,6 +7,9 @@ class GenericSerdes(Elaboratable):
 
         self.tx_data = Signal(20)
         self.tx_clock = Signal()
+
+    def elaborate(self, platform):
+        return Module()
 
 default_serdes = None
 def get_serdes_implementation():
