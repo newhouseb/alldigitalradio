@@ -8,7 +8,7 @@ platforms = {
 }
 
 @contextmanager
-def use(name):
+def use(name, **kwargs):
     platform, serdes = platforms[name]()
     alldigitalradio.io.generic_serdes.default_serdes = serdes
     yield platform
