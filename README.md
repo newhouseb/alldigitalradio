@@ -1,6 +1,6 @@
 # alldigitalradio - A toolbox for creating entirely digital radios using nmigen.
 
-This is a collection of functional components used to build digital radios that use direct RF sampling at one bit of precision using SERDES transceivers on FPGAs. It was initially broken out of the [onebitbt](https://github.com/newhouseb/onebitbt) repository so that components oculd be reused in other kinds of radios (i.e. low-speed WiFi). it is far from perfect and is expected to evolve fairly quickly. If you want to use it, I'd suggest forking it so that you aren't caught off guard when an interface changes.
+This is a collection of functional components used to build digital radios that use direct RF sampling at one bit of precision using SERDES transceivers on FPGAs. It was initially broken out of the [onebitbt](https://github.com/newhouseb/onebitbt) repository so that components could be reused in other kinds of radios (i.e. low-speed WiFi). it is far from perfect and is expected to evolve fairly quickly. If you want to use it, I'd suggest forking it so that you aren't caught off guard when an interface changes.
 
 # Getting started.
 
@@ -36,6 +36,12 @@ For the various building blocks, you can refer to the notebooks in the `research
 - [Trigonometry](https://github.com/newhouseb/alldigitalradio/blob/main/research/Trigonometry.ipynb) - Computing the magnitude of a complext signal.
 - [Shift Registers](https://github.com/newhouseb/alldigitalradio/blob/main/research/ShiftRegisters.ipynb) - Shift registers underpinning whitening and CRC checking.
 - [Parsing](https://github.com/newhouseb/alldigitalradio/blob/main/research/Parsing.ipynb) - Not nmigen, but just generic Python utilities to parse and generate arbitrary packets.
+
+# FAQ
+
+## Something is incorrect!
+
+Please let me know! Twitter (@newhouseb) or GitHub is fine. I've been engineering in a cave and have no professional experience in this space, so I'm sure there are errors in addition to random bugs.
 
 # Credits
 
