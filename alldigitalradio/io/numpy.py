@@ -73,12 +73,6 @@ def test_make_callable():
             self.input = Signal(8)
             self.output = Signal(8)
             self.sync_output = Signal(8)
-            
-        def inputs(self):
-            return [self.input]
-        
-        def outputs(self):
-            return [self.output, self.sync_output]
         
         def elaborate(self, platform):
             m = Module()
@@ -86,7 +80,10 @@ def test_make_callable():
             m.d.sync += self.sync_output.eq(self.input << 1)
             return m
         
-    doubler = make_callable(Doubler())
+    doubler = Doubler()
+    doubler = make_callable(doubler, 
+        inputs=[doubler.input], 
+        outputs=[doubler.output, doubler.sync_output])
 
     assert doubler(1) == [2, 0]
     assert doubler(2) == [4, 2]
