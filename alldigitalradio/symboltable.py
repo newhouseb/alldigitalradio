@@ -35,8 +35,11 @@ class SymbolTable(Elaboratable):
         last_sample_index = Signal(range(self.samples_per_symbol//20))
         packet_index = Signal(16)
 
+        reset = Signal()
+        domain += reset.eq(self.tx_reset)
+
         # Reset going high unsets done and resets counters
-        with m.If(self.tx_reset):
+        with m.If(reset):
             domain += [
                 self.tx_done.eq(0),
             ]
@@ -68,26 +71,24 @@ class SymbolTable(Elaboratable):
                     # We need to delay the sample_index because we need to pull the base symbol idx
                     # from memory which takes a cycle
                     last_sample_index.eq(sample_index),
-                ]
-                m.d.comb += [
-                    symbol_idx.addr.eq(packet_index),
+                    symbol_samples.addr.eq(symbol_idx.data + last_sample_index),
                     self.tx_data.eq(symbol_samples.data),
-                    symbol_samples.addr.eq((symbol_idx.data * self.samples_per_symbol//20) + last_sample_index),
                 ]
+                m.d.comb += symbol_idx.addr.eq(packet_index),
 
             # If we are done, output zeros
             # TODO: This will zero out the output before the pipeline has fully pushed through
             # this is only a couple clock cycles worth of data so not a huge deal but would be good to
             # properly transmit _all_ the data
             with m.Else():
-                m.d.comb += self.tx_data.eq(0)
+                domain += self.tx_data.eq(0)
 
         return m
 
 def test_symbol_table():
     st = SymbolTable(
         table=[i for i in range(100)], 
-        packet=Memory(width=16, depth=5, init=[1,2,3,4,5]),
+        packet=Memory(width=16, depth=5, init=[i*10 for i in [1,2,3,4,5]]),
         samples_per_symbol=10*20,
         tx_domain="sync")
     st = make_callable(st, inputs=[st.tx_reset, st.packet_length], outputs=[st.tx_data, st.tx_done])
@@ -99,8 +100,8 @@ def test_symbol_table():
         print(i, out, done)
         if done:
             break
-        if i > 2:
-            assert(i + 10 - 2 == out)
+        if i > 4:
+            assert(i + 10 - 4 == out)
 
     # Do it again to test reset logic
     print(st(1, 5))
@@ -109,5 +110,5 @@ def test_symbol_table():
         print(i, out, done)
         if done:
             break
-        if i > 2:
-            assert(i + 10 - 2 == out)
+        if i > 4:
+            assert(i + 10 - 4 == out)
