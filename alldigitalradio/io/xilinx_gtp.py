@@ -15,19 +15,27 @@ from nmigen.build import DiffPairs
 from alldigitalradio.io.generic_serdes import GenericSerdes
 
 class XilinxGTPSerdes(GenericSerdes):
-    def __init__(self, refclk_freq=125e6, line_rate=5e9):
+    def __init__(self, refclk_freq=125e6, line_rate=5e9, internal_refclk=None):
         super().__init__(refclk_freq=refclk_freq, line_rate=line_rate)
+        self.line_rate = line_rate
+        self.internal_refclk = internal_refclk
+        self.refclk_freq = refclk_freq
+        self.has_internal_refclk = internal_refclk is not None
 
     def elaborate(self, platform):
         m = Module()
 
         refclk = Signal()
-        m.submodules.clock = Instance('IBUFDS_GTE2',
-            o_O=refclk,
-            i_I=platform.request('clk_p', dir='-'),
-            i_IB=platform.request('clk_n', dir='-'),
-            i_CEB=0)
-        m.submodules.pll = pll = GTPQuadPLL(refclk, 125e6, 5e9)
+        if self.has_internal_refclk:
+            m.d.comb += refclk.eq(self.internal_refclk)
+        else:
+            m.submodules.clock = Instance('IBUFDS_GTE2',
+                o_O=refclk,
+                i_I=platform.request('clk_p', dir='-'),
+                i_IB=platform.request('clk_n', dir='-'),
+                i_CEB=0)
+
+        m.submodules.pll = pll = GTPQuadPLL(refclk, self.refclk_freq, self.line_rate, refclk_internal=self.has_internal_refclk)
         m.submodules.gtp = gtp = GTP(pll, 
             [platform.request('tx_n', dir='-'), platform.request('tx_p', dir='-')], 
             [platform.request('rx_n', dir='-'), platform.request('rx_p', dir='-')], 
@@ -61,11 +69,12 @@ class WaitTimer(Elaboratable):
 # GTP Quad PLL -------------------------------------------------------------------------------------
 
 class GTPQuadPLL(Elaboratable):
-    def __init__(self, refclk, refclk_freq, linerate, channel=0, shared=False):
+    def __init__(self, refclk, refclk_freq, linerate, refclk_internal=None, channel=0, shared=False):
         assert channel in [0, 1]
         self.channel = channel
         self.clk     = Signal()
         self.inrefclk  = refclk
+        self.refclk_internal = refclk_internal
         self.refclk = Signal()
         self.reset   = Signal()
         self.lock    = Signal()
@@ -78,13 +87,16 @@ class GTPQuadPLL(Elaboratable):
         if not self.shared:
             gtpe2_common_params = dict(
                 # common
-                i_GTREFCLK0    = self.inrefclk,
                 i_BGBYPASSB    = 1,
                 i_BGMONITORENB = 1,
                 i_BGPDB        = 1,
                 i_BGRCALOVRD   = 0b11111,
                 i_RCALENB      = 1,
             )
+            if self.refclk_internal:
+                gtpe2_common_params['i_GTGREFCLK0'] = self.inrefclk
+            else:
+                gtpe2_common_params['i_GTREFCLK0'] = self.inrefclk
 
             if self.channel == 0:
                 gtpe2_common_params.update(
@@ -94,7 +106,7 @@ class GTPQuadPLL(Elaboratable):
                     p_PLL0_REFCLK_DIV = self.config["m"],
                     i_PLL0LOCKEN      = 1,
                     i_PLL0PD          = 0,
-                    i_PLL0REFCLKSEL   = 0b001,
+                    i_PLL0REFCLKSEL   = 0b111 if self.refclk_internal else 0b001,
                     i_PLL0RESET       = self.reset,
                     o_PLL0LOCK        = self.lock,
                     o_PLL0OUTCLK      = self.clk,
@@ -969,7 +981,7 @@ class GTP(Elaboratable):
             o_GTPTXP               = self.tx_pads[1],
             i_TXBUFDIFFCTRL        = 0b100,
             i_TXDEEMPH             = 0,
-            i_TXDIFFCTRL           = 0b1000,
+            i_TXDIFFCTRL           = 0b1111,
             i_TXDIFFPD             = 0,
             i_TXINHIBIT            = 0,
             i_TXMAINCURSOR         = 0b0000000,

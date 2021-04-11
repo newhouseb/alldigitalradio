@@ -10,7 +10,6 @@ class SymbolTable(Elaboratable):
             samples_per_symbol is the number of bits per symbol at the TX output bit rate
             tx_domain is the name of the domain used to clock the SERDES TX
         """
-        print(table)
         self.table = Memory(width=20, depth=len(table), init=table)
         self.samples_per_symbol = samples_per_symbol
         self.tx_domain = tx_domain
@@ -48,7 +47,7 @@ class SymbolTable(Elaboratable):
                 # If we're at the end of a symbol
                 with m.If(sample_index == (self.samples_per_symbol//20 - 1)):
                     # If we're done with all symbols, stop doing things
-                    with m.If(packet_index >= self.packet_length - 1):
+                    with m.If((packet_index + 1) >= self.packet_length):
                         domain += [
                             self.tx_done.eq(1),
                             sample_index.eq(0),
