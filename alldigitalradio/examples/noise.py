@@ -8,7 +8,7 @@ import alldigitalradio.hardware as hardware
 from alldigitalradio.shiftregisters import prbs9, prbs14
 from alldigitalradio.util import pack_mem
 
-class CWOutExample(Elaboratable):
+class NoiseExample(Elaboratable):
     def elaborate(self, platform):
         m = Module()
         m.submodules.serdes = serdes = get_serdes_implementation()()
@@ -32,4 +32,4 @@ class CWOutExample(Elaboratable):
 
 if __name__ == '__main__':
     with hardware.use(sys.argv[1]) as platform:
-        platform().build(CWOutExample(), do_program=True)
+        platform().build(NoiseExample(), do_program=True)
