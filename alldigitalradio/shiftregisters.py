@@ -107,5 +107,8 @@ def prbs(n=0, taps=[]):
 
 prbs4 = lambda: prbs(n=4, taps=[2,3])
 prbs9 = lambda: prbs(n=9, taps=[4,8])
+prbs11 = lambda: prbs(n=11, taps=[8,10])
+prbs13 = lambda: prbs(n=13, taps=[7,10,11,12])
+prbs14 = lambda: prbs(n=14, taps=[1,11,12,13])
 prbs15 = lambda: prbs(n=15, taps=[13,14])
 prbs23 = lambda: prbs(n=23, taps=[17,22])
