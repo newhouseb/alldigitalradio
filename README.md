@@ -14,7 +14,7 @@ pip install git+https://github.com/nmigen/nmigen
 **Pro-tip:** if you want to hack on this repository, I'd recomment cloning it and then doing:
 
 ```
-pip install +e [path to checkout]
+pip install -e [path to checkout]
 ```
 
 This will allow you to depend on this package from another project and edit this package live without needing to reinstall.
