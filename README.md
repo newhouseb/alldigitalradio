@@ -7,7 +7,7 @@ This is a collection of functional components used to build digital radios that 
 First, install dependencies (ideally in a python3 virtual environment)
 
 ```
-pip install numpy scipy jupyterlab
+pip install numpy scipy jupyterlab matplotlib
 pip install git+https://github.com/nmigen/nmigen
 ```
 
