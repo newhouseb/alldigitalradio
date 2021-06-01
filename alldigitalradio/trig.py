@@ -52,9 +52,10 @@ class Cordic(Elaboratable):
     
     Note: there is no constant factor correction in this implementation
     """
-    def __init__(self, bit_depth=16, stages=8):
+    def __init__(self, bit_depth=16, stages=8, domain: str="sync"):
         self.bit_depth = bit_depth
         self.stages = stages
+        self.domain = domain
         
         self.input_x = Signal(signed(bit_depth))
         self.input_y = Signal(signed(bit_depth))
@@ -65,22 +66,26 @@ class Cordic(Elaboratable):
         # Mostly useful for debugging more than anything else
         self.output_x = Signal(signed(bit_depth))
         self.output_y = Signal(signed(bit_depth))
+
+        self.latency = stages + 2
         
     def elaborate(self, platform):
         m = Module()
+
+        domain = getattr(m.d, self.domain)
         
         # First state flips the coordinates if necessaru such that the angle is [-90deg,90deg]
         input_x_flipped = Signal(signed(self.bit_depth))
         input_y_flipped = Signal(signed(self.bit_depth))
         flipped = Signal()
         with m.If(self.input_x < 0):
-            m.d.sync += [
+            domain += [
                 input_x_flipped.eq(-self.input_x),
                 input_y_flipped.eq(self.input_y),
                 flipped.eq(1),
             ]
         with m.Else():
-            m.d.sync += [
+            domain += [
                 input_x_flipped.eq(self.input_x),
                 input_y_flipped.eq(self.input_y),
                 flipped.eq(0)
@@ -103,19 +108,19 @@ class Cordic(Elaboratable):
             angle = int(2**(self.bit_depth - 4)*np.arctan(2**-i))
             
             with m.If(cur_y < 0):
-                m.d.sync += [
+                domain += [
                     next_x.eq(cur_x - (cur_y >> i)),
                     next_y.eq(cur_y + (cur_x >> i)),
                     next_angle.eq(cur_angle - angle)
                 ]
             with m.Else():
-                m.d.sync += [
+                domain += [
                     next_x.eq(cur_x + (cur_y >> i)),
                     next_y.eq(cur_y - (cur_x >> i)),
                     next_angle.eq(cur_angle + angle)
                 ]
             
-            m.d.sync += next_flipped.eq(cur_flipped)
+            domain += next_flipped.eq(cur_flipped)
             
             cur_x = next_x
             cur_y = next_y
@@ -125,14 +130,14 @@ class Cordic(Elaboratable):
         # Final stage flips the angle back if we flipped the coords at the start and makes
         # sure that the angle is positive (to make discontinuities more predictable)        
         with m.If(cur_flipped):
-            m.d.sync += self.angle.eq(int(2**(self.bit_depth - 4)*np.pi) - cur_angle)
+            domain += self.angle.eq(int(2**(self.bit_depth - 4)*np.pi) - cur_angle)
         with m.Else():
             with m.If(cur_angle < 0):
-                m.d.sync += self.angle.eq(int(2**(self.bit_depth - 4)*2*np.pi) + cur_angle)
+                domain += self.angle.eq(int(2**(self.bit_depth - 4)*2*np.pi) + cur_angle)
             with m.Else():
-                m.d.sync += self.angle.eq(cur_angle)
+                domain += self.angle.eq(cur_angle)
             
-        m.d.sync += [
+        domain += [
             self.magnitude.eq(cur_x),
             self.output_x.eq(cur_x),
             self.output_y.eq(cur_y),
